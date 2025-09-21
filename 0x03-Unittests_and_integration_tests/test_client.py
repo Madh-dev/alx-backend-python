@@ -61,7 +61,6 @@ class TestGithubOrgClient(unittest.TestCase):
                 "http://example.com/repos"
             )
 
-
     @parameterized.expand([
         ({"license": {"key": "my_license"}}, "my_license", True),
         ({"license": {"key": "other_license"}}, "my_license", False),
@@ -73,7 +72,10 @@ class TestGithubOrgClient(unittest.TestCase):
         expected: bool
     ) -> None:
         """Tests the `has_license` static method."""
-        self.assertEqual(GithubOrgClient.has_license(repo, license_key), expected)
+        self.assertEqual(
+            GithubOrgClient.has_license(repo, license_key),
+            expected
+        )
 
 
 @parameterized_class(
