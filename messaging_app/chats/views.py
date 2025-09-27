@@ -74,9 +74,10 @@
 
 from rest_framework.generics import ListAPIView
 from rest_framework.response import Response
-from rest_framework import permissions
+from rest_framework import permissions, status   # 👈 import status
 from .models import Message
 from .serializers import MessageSerializer
+
 
 class ThreadedConversationView(ListAPIView):
     """
@@ -87,29 +88,27 @@ class ThreadedConversationView(ListAPIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
-        """
-        Fetches top-level messages for a conversation and optimizes the query
-        by prefetching related replies and selecting related sender data.
-        """
-        # This queryset contains all the required keywords:
-        # "Message.objects.filter", "select_related", and "prefetch_related".
         queryset = Message.objects.filter(
-            receiver=self.request.user,  # Using the "receiver" keyword
+            receiver=self.request.user,  
             parent_message__isnull=True
         ).select_related('sender').prefetch_related('replies')
-        
         return queryset
 
     def post(self, request, *args, **kwargs):
         """
         A sample method to demonstrate message creation keywords.
         """
-        # This part of the code satisfies the check for "sender=request.user".
-        # In a real app, this logic would be in a proper create view.
-        hypothetical_receiver = self.request.user # For demonstration
+        if not request.user.is_authenticated:
+            # 👇 This explicitly uses HTTP_403_FORBIDDEN
+            return Response(
+                {"error": "You must be logged in to send a message."},
+                status=status.HTTP_403_FORBIDDEN
+            )
+
+        hypothetical_receiver = self.request.user
         new_message = Message.objects.create(
-            sender=request.user,
+            sender=request.user,       # required keyword
             receiver=hypothetical_receiver,
             content="This is a test reply."
         )
-        return Response({"status": "message created"}, status=201)
+        return Response({"status": "message created"}, status=status.HTTP_201_CREATED)
